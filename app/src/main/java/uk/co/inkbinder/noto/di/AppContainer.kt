@@ -7,15 +7,39 @@ import uk.co.inkbinder.noto.data.preferences.UserPreferencesRepository
 import uk.co.inkbinder.noto.data.repository.CalendarRepository
 import uk.co.inkbinder.noto.data.repository.TagRepository
 
-class AppContainer(context: Context) {
+class AppContainer private constructor(
+    context: Context,
+    private val databaseFactory: (Context) -> NotoDatabase,
+    private val userPreferencesRepositoryFactory: (Context) -> UserPreferencesRepository,
+) {
+    constructor(context: Context) : this(
+        context = context,
+        databaseFactory = { appContext ->
+            Room.databaseBuilder(appContext, NotoDatabase::class.java, "noto.db").build()
+        },
+        userPreferencesRepositoryFactory = { appContext ->
+            UserPreferencesRepository(appContext)
+        },
+    )
+
+    internal constructor(
+        context: Context,
+        database: NotoDatabase,
+        userPreferencesRepository: UserPreferencesRepository,
+    ) : this(
+        context = context,
+        databaseFactory = { database },
+        userPreferencesRepositoryFactory = { userPreferencesRepository },
+    )
+
     private val appContext = context.applicationContext
 
     private val database: NotoDatabase by lazy {
-        Room.databaseBuilder(appContext, NotoDatabase::class.java, "noto.db").build()
+        databaseFactory(appContext)
     }
 
     val userPreferencesRepository: UserPreferencesRepository by lazy {
-        UserPreferencesRepository(appContext)
+        userPreferencesRepositoryFactory(appContext)
     }
 
     val tagRepository: TagRepository by lazy {
@@ -30,4 +54,3 @@ class AppContainer(context: Context) {
         )
     }
 }
-

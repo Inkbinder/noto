@@ -15,8 +15,12 @@ import uk.co.inkbinder.noto.domain.model.WeekStart
 
 private val Context.userPreferencesStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
 
-class UserPreferencesRepository(private val context: Context) {
-    val userPreferences: Flow<UserPreferences> = context.userPreferencesStore.data.map { preferences ->
+class UserPreferencesRepository internal constructor(
+    private val userPreferencesStore: DataStore<Preferences>,
+) {
+    constructor(context: Context) : this(context.userPreferencesStore)
+
+    val userPreferences: Flow<UserPreferences> = userPreferencesStore.data.map { preferences ->
         UserPreferences(
             periodPredictionEnabled = preferences[periodPredictionEnabledKey] ?: true,
             defaultCycleLengthDays = preferences[defaultCycleLengthDaysKey] ?: 28,
@@ -28,25 +32,25 @@ class UserPreferencesRepository(private val context: Context) {
     }
 
     suspend fun markDefaultsSeeded(version: Int) {
-        context.userPreferencesStore.edit { preferences ->
+        userPreferencesStore.edit { preferences ->
             preferences[seededDefaultsVersionKey] = version
         }
     }
 
     suspend fun setPredictionEnabled(enabled: Boolean) {
-        context.userPreferencesStore.edit { preferences ->
+        userPreferencesStore.edit { preferences ->
             preferences[periodPredictionEnabledKey] = enabled
         }
     }
 
     suspend fun setDefaultCycleLengthDays(days: Int) {
-        context.userPreferencesStore.edit { preferences ->
+        userPreferencesStore.edit { preferences ->
             preferences[defaultCycleLengthDaysKey] = days.coerceIn(14, 60)
         }
     }
 
     suspend fun setWeekStartsOn(weekStart: WeekStart) {
-        context.userPreferencesStore.edit { preferences ->
+        userPreferencesStore.edit { preferences ->
             preferences[weekStartsOnKey] = weekStart.name
         }
     }
@@ -58,4 +62,3 @@ class UserPreferencesRepository(private val context: Context) {
         val seededDefaultsVersionKey = intPreferencesKey("seeded_defaults_version")
     }
 }
-

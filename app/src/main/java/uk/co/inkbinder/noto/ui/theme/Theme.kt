@@ -29,9 +29,11 @@ private val DarkColors = darkColorScheme(
 )
 
 @Composable
-fun NotoTheme(content: @Composable () -> Unit) {
-    val darkTheme = isSystemInDarkTheme()
-    val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+fun NotoTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+    content: @Composable () -> Unit,
+) {
     val colorScheme = when {
         dynamicColor && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
         dynamicColor && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
@@ -44,4 +46,3 @@ fun NotoTheme(content: @Composable () -> Unit) {
         content = content,
     )
 }
-

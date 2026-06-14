@@ -1,6 +1,6 @@
 # Flexible Cycle Tracker Implementation Plan
 
-Status: Draft  
+Status: Active backlog  
 Last updated: 2026-06-14  
 Related docs:
 
@@ -9,384 +9,222 @@ Related docs:
 
 ## 1. Purpose
 
-This document turns the current product direction into a practical MVP build plan.
+This document is the ordered implementation list for the Android app as it exists today.
 
-The goal is to build a calm, mobile-first tracker that:
+It reflects two decisions:
 
-- stores custom tags with a label and color
-- lets the user assign multiple tags to a day
-- renders up to 6 vertical color slices inside each calendar day cell
-- predicts the next period from the `Bleeding` tag history
-- works without any fertility or ovulation feature set
+- every feature item includes tests as part of the work
+- because there are currently no automated tests in the repo, backfilling coverage for the existing scaffold is the first priority
 
-## 2. Working Assumptions
+## 2. Current App State
 
-This plan assumes:
+The current scaffold already includes:
 
-- v1 is a single-user mobile app
-- v1 is local-first, with no account system or sync
-- the first build targets one platform-friendly codebase rather than separate native apps
-- the data model in the design doc is still valid
-- the current agreed month-view rule is `1 = full fill`, `2-6 = equal vertical slices`, `7+ = slices plus overflow badge`
+- Android app shell with Jetpack Compose
+- Room database and DataStore-backed settings
+- seeded default tags
+- month calendar with vertical color slices
+- day detail tag toggling
+- settings for period prediction, cycle length, and week start
+- basic period prediction banner
+- AGP 9.2.1 / Gradle 9.4.1 build setup
 
-If any of those change, the plan is still usable, but the sequencing may shift.
+The current scaffold does not yet include:
 
-## 3. Decisions To Lock Before Coding
+- automated tests
+- tag create/edit/archive flows
+- stronger prediction rules and edge-case handling
+- accessibility and UI hardening
 
-These do not need perfect answers, but they should be decided before implementation starts:
+## 3. Delivery Rule
 
-1. Framework choice
-   Recommended: one cross-platform mobile stack.
-2. Local persistence choice
-   Recommended: SQLite-backed storage or an equivalent structured local database.
-3. `Bleeding` tag behavior
-   Decide whether it is non-removable or simply a default starter tag.
-4. Day edit behavior
-   Decide between autosave on toggle or a `Done` action.
-5. Overflow rule
-   Confirm how `7+` tags are shown in the day cell.
-6. Notes in v1
-   Decide whether `note` exists in the data model now or stays dormant until later.
+No implementation item is done until its matching tests are added and passing.
 
-## 4. Recommended Technical Shape
+For this project, that means:
 
-Even if the exact stack changes, the app should be split into these layers:
+- domain logic gets unit tests
+- repository and persistence behavior gets integration-style tests
+- user flows that matter visually or interaction-wise get UI tests
+- `assembleDebug` stays green after every change
 
-### 4.1 Presentation Layer
+## 4. Ordered Implementation List
 
-- Month calendar screen
-- Day detail sheet/modal
-- Tag management screen
-- Create/edit tag screen
-- Settings screen
+## Item 1: Build the test baseline and backfill current functionality
 
-### 4.2 Domain Layer
+Goal: make the existing scaffold safe to build on.
 
-- calendar composition logic
-- day-to-tag assignment logic
-- tag sorting and archive behavior
-- period episode detection
-- next-period prediction logic
-- accessibility label generation for each day
+Implementation:
 
-### 4.3 Data Layer
+- add the project test structure under `app/src/test` and `app/src/androidTest`
+- add any missing test dependencies for coroutines, Room, and Compose UI testing
+- add unit tests for `MonthGridBuilder`
+- add unit tests for `PeriodPredictionEngine`
+- add unit tests for day-slice and overflow behavior:
+  - `0 tags`
+  - `1 tag`
+  - `2-6 tags`
+  - `7+ tags`
+- add repository tests for:
+  - toggling tags on a day
+  - loading month summaries
+  - archived tags being hidden from active pickers
+- add settings tests for:
+  - prediction enabled/disabled
+  - cycle length updates
+  - week-start updates
 
-- `tags`
-- `day_entries`
-- `settings`
-- derived selectors for month cells, day detail state, and period summary banner
+Done when:
 
-### 4.4 Suggested Internal Modules
+- current behavior is covered by automated tests
+- tests document the expected rules for slice rendering and prediction behavior
+- future feature work has a safe baseline
 
-- `calendar/`
-- `tags/`
-- `entries/`
-- `prediction/`
-- `settings/`
-- `storage/`
-- `ui/`
+## Item 2: Finish tag management
 
-The exact folder names can change, but the logic should stay separated this way.
+Goal: let the user control the tracker vocabulary without code changes.
 
-## 5. MVP Delivery Plan
+Implementation:
 
-## Phase 0: Foundation
+- add create-tag flow
+- add edit-tag flow
+- add archive/unarchive behavior
+- add color selection
+- add sort-order support
+- add period-driving tag selection behavior
 
-Goal: create the app shell and development baseline.
+Tests:
 
-Deliverables:
+- repository tests for create, update, archive, and reorder
+- ViewModel tests for form state and validation
+- UI tests for:
+  - creating a tag
+  - editing a tag
+  - archiving a tag
+  - seeing the new tag appear in day detail immediately
 
-- project scaffold
-- navigation shell
-- theme tokens for colors, spacing, typography
-- date utilities
-- local storage setup
-- seed mechanism for default tags and default settings
+Done when:
 
-Acceptance criteria:
+- the placeholder note on the tags screen is gone
+- custom tags are fully manageable in-app
+- historical entries survive tag archiving correctly
 
-- app boots to a placeholder home screen
-- local database or structured local persistence is working
-- a first-run seed inserts default tags and settings exactly once
+## Item 3: Improve the day-detail logging flow
 
-Notes:
+Goal: make daily logging fast enough to use casually.
 
-- keep the visual system intentionally simple at this stage
-- do not build prediction or full editing yet
+Implementation:
 
-## Phase 1: Data Model and Storage
+- improve the selected-state presentation for tags
+- add clearer feedback when toggling tags
+- decide and implement autosave vs explicit done behavior
+- make period-driving tags understandable in the day editor
+- ensure many-tag days still feel manageable
 
-Goal: make tag and day-entry storage real before UI complexity grows.
+Tests:
 
-Deliverables:
+- unit or ViewModel tests for toggle behavior
+- UI tests for:
+  - opening a day
+  - selecting multiple tags
+  - deselecting tags
+  - leaving and reopening with persisted state intact
+  - overflow cases with many tags
 
-- `Tag` storage model
-- `DayEntry` storage model
-- `UserSettings` storage model
-- repository/service methods for:
-  - list tags
-  - create tag
-  - update tag
-  - archive tag
-  - get day entry by date
-  - toggle tag on date
-  - load month data
+Done when:
 
-Acceptance criteria:
+- a user can log a day quickly without confusion
+- the month view updates reliably after edits
 
-- tags persist across app restarts
-- multiple tags can be attached to one day
-- archived tags no longer appear in normal tag pickers
-- date lookups are stable and timezone-safe
+## Item 4: Harden period prediction
 
-Primary risk:
+Goal: make the banner feel helpful and predictable without drifting into fertility tracking.
 
-- date normalization bugs
+Implementation:
 
-Recommendation:
+- define bleed-episode rules from consecutive bleeding days
+- refine cycle interval calculations
+- handle sparse history and inconsistent history explicitly
+- improve the copy for:
+  - no prediction
+  - due soon
+  - due today
+  - delayed
+- confirm prediction can be fully disabled in settings
 
-- normalize stored dates to local calendar dates in `YYYY-MM-DD` form and keep that consistent everywhere
+Tests:
 
-## Phase 2: Calendar Home Screen
+- unit tests for episode detection
+- unit tests for interval calculation
+- unit tests for banner-state wording triggers
+- integration tests showing prediction changes after bleeding history updates
 
-Goal: deliver a usable read-only month view backed by real data.
+Done when:
 
-Deliverables:
+- prediction behavior is simple, explainable, and well covered by tests
+- no ovulation or fertility concepts leak into logic or UI
 
-- month navigation
-- month grid
-- current-day styling
-- selected-day styling
-- top banner placeholder with simple prediction text states
-- segmented cell renderer:
-  - 1 tag = full fill
-  - 2-6 tags = equal vertical slices
-  - 7+ tags = first 6 slices plus overflow badge
+## Item 5: Accessibility and visual hardening
 
-Acceptance criteria:
+Goal: make the app readable and understandable in everyday use.
 
-- month renders correctly for varying month lengths
-- day numbers remain readable on tinted fills
-- cells render stable segment ordering
-- empty days look clean and uncluttered
+Implementation:
 
-Primary risk:
+- improve day-cell contrast and text legibility
+- add accessible descriptions for color-sliced day cells
+- verify non-current-month and today states remain readable
+- refine spacing, touch targets, and empty states
+- handle long tag names gracefully
 
-- visual density and legibility in narrow cells
+Tests:
 
-Recommendation:
+- UI tests for accessible labels on day cells
+- UI tests for day-detail content descriptions where useful
+- snapshot or screenshot-style checks if we decide to add them
 
-- keep fills soft and tag order deterministic
+Done when:
 
-## Phase 3: Day Detail Logging Flow
+- color is not the only way to understand a day
+- the calendar remains legible across common edge cases
 
-Goal: make the core user action fast and reliable.
+## Item 6: Reliability and data safety
 
-Deliverables:
+Goal: reduce risk before the app starts storing real personal history long-term.
 
-- tap day to open day detail sheet
-- selected tags section
-- available tags list
-- toggle tag on/off
-- optional autosave or explicit save behavior
-- accessible day summary string
+Implementation:
 
-Acceptance criteria:
+- review date normalization and timezone assumptions
+- add migration strategy for schema changes
+- consider backup/export format for future-proofing
+- ensure seed data upgrades are idempotent
 
-- user can mark a day in one or two taps
-- toggling updates the month view immediately
-- reopening a day shows the correct persisted tags
-- day detail screen always names the tags represented by color in the month grid
+Tests:
 
-Primary risk:
+- migration tests
+- repository tests around seed/version behavior
+- tests for date handling around month boundaries and leap years
 
-- interaction ambiguity if autosave is used without clear feedback
+Done when:
 
-Recommendation:
+- app updates are less risky
+- stored history can survive schema evolution cleanly
 
-- if autosave is chosen, show subtle instant confirmation and update the calendar underneath immediately
+## 5. Suggested Build Sequence
 
-## Phase 4: Tag Management
+The best order from here is:
 
-Goal: let the user adapt the tracker to real life without product intervention.
+1. test baseline and backfill
+2. tag management
+3. day-detail polish
+4. prediction hardening
+5. accessibility and visual hardening
+6. reliability and migration work
 
-Deliverables:
+## 6. Definition of Done
 
-- tag list screen
-- add tag flow
-- edit tag flow
-- color picker
-- sort order management
-- archive/unarchive behavior
-- period-driving tag toggle or selector
+For each implementation item:
 
-Acceptance criteria:
-
-- user can create a new tag in under a minute
-- a new tag becomes available in day logging immediately
-- archiving hides the tag without deleting historical entries
-- exactly one period-driving tag rule is enforced if that is the chosen behavior
-
-Primary risk:
-
-- making tag setup feel heavier than day logging
-
-Recommendation:
-
-- prioritize speed over customization depth
-
-## Phase 5: Period Prediction
-
-Goal: add the small amount of cycle intelligence that is actually useful.
-
-Deliverables:
-
-- episode detection from consecutive `Bleeding` days
-- cycle interval calculation
-- fallback logic for sparse history
-- top-banner states:
-  - `No prediction yet`
-  - `Period due in X days`
-  - `Period due today`
-  - `Delayed by X days`
-- optional faint prediction hint on calendar if still wanted after testing
-
-Acceptance criteria:
-
-- prediction updates automatically after bleeding history changes
-- consecutive bleeding days count as one period episode
-- no fertility or ovulation concepts appear anywhere in logic or UI
-
-Primary risk:
-
-- edge cases around partial or inconsistent bleeding history
-
-Recommendation:
-
-- ship simple and explainable rules rather than “smart” hidden heuristics
-
-## Phase 6: Polish, Accessibility, and Hardening
-
-Goal: make the MVP feel stable, readable, and respectful.
-
-Deliverables:
-
-- accessibility labels for every day cell
-- color contrast pass
-- empty-state copy
-- first-run experience cleanup
-- performance cleanup for calendar rendering
-- basic analytics hooks only if explicitly wanted
-
-Acceptance criteria:
-
-- each day can be described in text without relying on color alone
-- navigation and logging feel fast on a real phone
-- no broken states when there are 0 tags, 1 tag, or many tags
-
-## 6. Suggested Build Order
-
-If one person is building this, the simplest order is:
-
-1. scaffold app + storage
-2. implement tags and day entries
-3. render the calendar home screen
-4. add the day detail logging flow
-5. add tag management
-6. add period prediction
-7. polish accessibility and edge cases
-
-This keeps the highest-value workflow moving first.
-
-## 7. Testing Plan
-
-### Unit Tests
-
-- period episode detection
-- cycle length calculation
-- due/delayed banner state logic
-- date normalization
-- segment layout helper for `0-7+` tags
-
-### Integration Tests
-
-- create tag -> tag appears in picker
-- toggle tag on a day -> month cell updates
-- archive tag -> hidden from picker, retained in history
-- bleeding history change -> prediction banner updates
-
-### Manual QA
-
-- month boundaries
-- timezone changes
-- leap years
-- daylight saving transitions
-- busy day with 6 tags
-- overflow day with 7+ tags
-- long tag names
-- first launch with no history
-
-## 8. Risks and Mitigations
-
-### Risk: calendar rendering gets fiddly early
-
-Mitigation:
-
-- implement the cell renderer as its own isolated component with snapshot coverage
-
-### Risk: date logic becomes messy
-
-Mitigation:
-
-- standardize local date handling from day one and avoid mixing timestamps with day keys in UI logic
-
-### Risk: prediction feels too “medical” or overconfident
-
-Mitigation:
-
-- keep messaging lightweight and explicitly estimated
-
-### Risk: tag management becomes overengineered
-
-Mitigation:
-
-- hold the line on v1: label, color, archive, prediction role, sort order
-
-## 9. Rough Effort
-
-Very rough solo-developer estimate for MVP:
-
-- Foundation + storage: 2-3 days
-- Calendar home screen: 2-4 days
-- Day logging flow: 2-3 days
-- Tag management: 2-3 days
-- Period prediction: 1-2 days
-- Polish + QA: 2-4 days
-
-Rough total:
-
-- about 2 to 4 weeks for a solid MVP, depending on stack choice and visual polish
-
-## 10. Recommended First Sprint
-
-The best first sprint is:
-
-1. scaffold the app
-2. implement local data models and repositories
-3. seed default tags
-4. build the month grid with mock data first
-5. swap mock data for real persisted month data
-
-That gets the hardest structural work done before we pile on more screens.
-
-## 11. Next Step
-
-Before implementation starts, I recommend we lock exactly these four things:
-
-1. framework
-2. storage approach
-3. autosave vs `Done`
-4. overflow treatment for `7+` tags
-
-Once those are decided, this is ready to turn into tickets.
-
+- feature behavior works on device or emulator
+- automated tests are added for the new behavior
+- existing tests still pass
+- `assembleDebug` passes
+- the code graph is re-indexed after the change set

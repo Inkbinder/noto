@@ -1,5 +1,6 @@
 package uk.co.inkbinder.noto.data.repository
 
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
@@ -23,6 +24,7 @@ class CalendarRepository(
     private val tagDao: TagDao,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val predictionEngine: PeriodPredictionEngine = PeriodPredictionEngine(),
+    private val clock: Clock = Clock.systemDefaultZone(),
 ) {
     fun observeMonthOverview(month: YearMonth): Flow<MonthOverview> {
         val monthStart = month.atDay(1)
@@ -34,13 +36,14 @@ class CalendarRepository(
             dayEntryDao.observePeriodDates(),
             userPreferencesRepository.userPreferences,
         ) { tagEntities, tagRefs, periodDateStrings, preferences ->
+            val today = LocalDate.now(clock)
             val tagsById = tagEntities.associateBy(TagEntity::id)
             val colorsByDate = buildTagColorsByDate(tagRefs, tagsById)
             val weeks = MonthGridBuilder.build(
                 month = month,
                 weekStartsOn = preferences.weekStartsOn.dayOfWeek,
                 visibleTagColorsByDate = colorsByDate,
-                today = LocalDate.now(),
+                today = today,
                 maxVisibleSlices = 6,
             )
 
@@ -49,7 +52,7 @@ class CalendarRepository(
                 bannerText = predictionEngine.buildBanner(
                     periodDateStrings = periodDateStrings,
                     preferences = preferences,
-                    today = LocalDate.now(),
+                    today = today,
                 ),
                 weeks = weeks,
                 weekStartsOn = preferences.weekStartsOn.dayOfWeek,
@@ -74,7 +77,7 @@ class CalendarRepository(
             DayEntryEntity(
                 date = dayKey,
                 note = null,
-                updatedAt = Instant.now().toString(),
+                updatedAt = Instant.now(clock).toString(),
             ),
         )
 
