@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Noto</string>
+    <string name="nav_home">Calendar</string>
+    <string name="nav_tags">Tags</string>
+    <string name="nav_settings">Settings</string>
+    <string name="banner_no_prediction">No prediction yet</string>
+    <string name="tags_empty_state">Create and edit tag flows are the next implementation step.</string>
+</resources>
+
