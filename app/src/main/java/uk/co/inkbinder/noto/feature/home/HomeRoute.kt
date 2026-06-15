@@ -3,6 +3,7 @@ package uk.co.inkbinder.noto.feature.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -141,6 +143,8 @@ private fun HomeScreen(
 
         CalendarGrid(
             monthOverview = monthOverview,
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
             onOpenDay = onOpenDay,
         )
     }
@@ -270,13 +274,38 @@ private fun MonthYearPickerDialog(
 @Composable
 private fun CalendarGrid(
     monthOverview: MonthOverview,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
     onOpenDay: (String) -> Unit,
 ) {
     val weekDays = remember(monthOverview.weekStartsOn) {
         buildWeekdays(monthOverview.weekStartsOn)
     }
 
-    Card(shape = RoundedCornerShape(20.dp)) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .semantics { contentDescription = "Calendar grid" }
+            .pointerInput(monthOverview.month) {
+                var totalDrag = 0f
+                detectHorizontalDragGestures(
+                    onHorizontalDrag = { change, dragAmount ->
+                        totalDrag += dragAmount
+                        change.consume()
+                    },
+                    onDragEnd = {
+                        when {
+                            totalDrag <= -120f -> onNextMonth()
+                            totalDrag >= 120f -> onPreviousMonth()
+                        }
+                        totalDrag = 0f
+                    },
+                    onDragCancel = {
+                        totalDrag = 0f
+                    },
+                )
+            },
+    ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 weekDays.forEach { day ->

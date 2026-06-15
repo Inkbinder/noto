@@ -87,6 +87,28 @@ class NotoAppSmokeTest {
         waitForText(targetMonth.format(monthFormatter))
     }
 
+    @Test
+    fun notoApp_calendarSwipesBetweenMonths() {
+        val currentMonth = YearMonth.now()
+        val previousMonth = currentMonth.minusMonths(1)
+        val nextMonth = currentMonth.plusMonths(1)
+        val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy")
+
+        composeRule.setContent {
+            NotoTheme(dynamicColor = false) {
+                NotoApp(appContainer = harness.appContainer)
+            }
+        }
+
+        waitForText(currentMonth.format(monthFormatter))
+        composeRule.onNodeWithContentDescription("Calendar grid").performTouchInput { swipeLeft() }
+        waitForText(nextMonth.format(monthFormatter))
+        composeRule.onNodeWithContentDescription("Calendar grid").performTouchInput { swipeRight() }
+        waitForText(currentMonth.format(monthFormatter))
+        composeRule.onNodeWithContentDescription("Calendar grid").performTouchInput { swipeRight() }
+        waitForText(previousMonth.format(monthFormatter))
+    }
+
     private fun monthPickerLabel(month: Month): String =
         month.getDisplayName(TextStyle.SHORT, Locale.getDefault()).replace(".", "").take(3)
 
