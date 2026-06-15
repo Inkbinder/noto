@@ -32,6 +32,15 @@ interface DayEntryDao {
     @Query("DELETE FROM day_entries WHERE date = :date AND NOT EXISTS (SELECT 1 FROM day_tag_cross_refs WHERE date = :date)")
     suspend fun deleteEntryIfEmpty(date: String)
 
+    @Query("SELECT DISTINCT date FROM day_tag_cross_refs WHERE tagId = :tagId ORDER BY date ASC")
+    suspend fun getDatesForTag(tagId: String): List<String>
+
+    @Query("DELETE FROM day_tag_cross_refs WHERE tagId = :tagId")
+    suspend fun deleteRefsForTag(tagId: String)
+
+    @Query("DELETE FROM day_entries WHERE NOT EXISTS (SELECT 1 FROM day_tag_cross_refs WHERE day_tag_cross_refs.date = day_entries.date)")
+    suspend fun deleteEntriesWithoutRefs()
+
     @Query(
         """
         SELECT refs.date
@@ -43,4 +52,3 @@ interface DayEntryDao {
     )
     fun observePeriodDates(): Flow<List<String>>
 }
-

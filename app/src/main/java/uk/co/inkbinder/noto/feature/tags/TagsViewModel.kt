@@ -122,6 +122,16 @@ class TagsViewModel(
         }
     }
 
+    fun deleteArchivedTag(tagId: String) {
+        if (editorState.value?.tagId == tagId) {
+            editorState.value = null
+        }
+
+        viewModelScope.launch {
+            tagRepository.deleteArchivedTag(tagId)
+        }
+    }
+
     fun moveTagEarlier(tagId: String) {
         viewModelScope.launch {
             tagRepository.moveTagEarlier(tagId)

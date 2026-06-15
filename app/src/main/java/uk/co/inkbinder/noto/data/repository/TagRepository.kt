@@ -3,11 +3,15 @@ package uk.co.inkbinder.noto.data.repository
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import uk.co.inkbinder.noto.data.local.db.dao.DayEntryDao
 import uk.co.inkbinder.noto.data.local.db.dao.TagDao
 import uk.co.inkbinder.noto.data.local.db.entity.TagEntity
 import uk.co.inkbinder.noto.domain.model.Tag
 
-class TagRepository(private val tagDao: TagDao) {
+class TagRepository(
+    private val tagDao: TagDao,
+    private val dayEntryDao: DayEntryDao,
+) {
     fun observeActiveTags(): Flow<List<Tag>> = tagDao.observeActive().map { entities ->
         entities.map { entity -> entity.toModel() }
     }
@@ -69,6 +73,15 @@ class TagRepository(private val tagDao: TagDao) {
                 sortOrder = restoredSortOrder,
             ),
         )
+    }
+
+    suspend fun deleteArchivedTag(tagId: String) {
+        val tag = tagDao.getAll().firstOrNull { entity -> entity.id == tagId } ?: return
+        if (!tag.isArchived) return
+
+        dayEntryDao.deleteRefsForTag(tagId)
+        dayEntryDao.deleteEntriesWithoutRefs()
+        tagDao.delete(tagId)
     }
 
     suspend fun moveTagEarlier(tagId: String) {

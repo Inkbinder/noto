@@ -31,4 +31,7 @@ interface TagDao {
 
     @Query("UPDATE tags SET isPeriodTag = 0")
     suspend fun clearPeriodTags()
+
+    @Query("DELETE FROM tags WHERE id = :tagId")
+    suspend fun delete(tagId: String)
 }

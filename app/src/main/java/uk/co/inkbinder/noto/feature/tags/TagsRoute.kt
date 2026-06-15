@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.RestoreFromTrash
 import androidx.compose.material3.AlertDialog
@@ -96,6 +98,7 @@ fun TagsRoute(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp),
+            contentPadding = PaddingValues(bottom = 104.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
@@ -121,6 +124,7 @@ fun TagsRoute(
                         tag = tag,
                         onEdit = { viewModel.openEditTag(tag) },
                         onRestore = { viewModel.restoreTag(tag.id) },
+                        onDelete = { viewModel.deleteArchivedTag(tag.id) },
                     )
                 }
             }
@@ -194,6 +198,7 @@ private fun ArchivedTagCard(
     tag: Tag,
     onEdit: () -> Unit,
     onRestore: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     TagCard(
         tag = tag,
@@ -205,6 +210,9 @@ private fun ArchivedTagCard(
                 }
                 IconButton(onClick = onRestore) {
                     Icon(Icons.Default.RestoreFromTrash, contentDescription = "Restore ${tag.label}")
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.DeleteForever, contentDescription = "Delete ${tag.label}")
                 }
             }
         },

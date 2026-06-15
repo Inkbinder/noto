@@ -75,6 +75,8 @@ class TagsRouteSmokeTest {
         waitForText("Archived tags")
         scrollToContentDescription("Restore No hangover")
         waitForContentDescription("Restore No hangover")
+        scrollToContentDescription("Delete No hangover")
+        waitForContentDescription("Delete No hangover")
     }
 
     private fun waitForText(text: String) {

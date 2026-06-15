@@ -2,7 +2,9 @@ package uk.co.inkbinder.noto.data.repository
 
 import android.content.Context
 import androidx.room.Room
+import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.test.core.app.ApplicationProvider
+import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -29,7 +31,10 @@ class TagRepositoryTest {
         database = Room.inMemoryDatabaseBuilder(context, NotoDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = TagRepository(database.tagDao())
+        repository = TagRepository(
+            tagDao = database.tagDao(),
+            dayEntryDao = database.dayEntryDao(),
+        )
     }
 
     @After
@@ -130,4 +135,42 @@ class TagRepositoryTest {
             repository.observeActiveTags().first().map { tag -> tag.id },
         )
     }
+
+    @Test
+    fun deleteArchivedTag_removesTheTagAndItsHistory() = runBlocking {
+        val date = LocalDate.of(2026, 6, 14)
+        database.tagDao().upsert(
+            TagEntity("archived", "Archived", "#444444", isPeriodTag = false, isArchived = true, sortOrder = 5),
+        )
+        database.dayEntryDao().upsertEntry(
+            uk.co.inkbinder.noto.data.local.db.entity.DayEntryEntity(
+                date = date.toString(),
+                updatedAt = "2026-06-14T10:00:00Z",
+            ),
+        )
+        database.dayEntryDao().insertRef(
+            uk.co.inkbinder.noto.data.local.db.entity.DayTagCrossRef(
+                date = date.toString(),
+                tagId = "archived",
+            ),
+        )
+
+        repository.deleteArchivedTag("archived")
+
+        assertTrue(repository.observeAllTags().first().isEmpty())
+        assertEquals(0, database.dayEntryDao().countRef(date.toString(), "archived"))
+        assertEquals(0, countDayEntries(date))
+    }
+
+    private fun countDayEntries(date: LocalDate): Int = database
+        .query(
+            SimpleSQLiteQuery(
+                "SELECT COUNT(*) FROM day_entries WHERE date = ?",
+                arrayOf(date.toString()),
+            ),
+        )
+        .use { cursor ->
+            cursor.moveToFirst()
+            cursor.getInt(0)
+        }
 }

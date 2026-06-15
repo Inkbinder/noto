@@ -43,7 +43,10 @@ class AppContainer private constructor(
     }
 
     val tagRepository: TagRepository by lazy {
-        TagRepository(database.tagDao())
+        TagRepository(
+            tagDao = database.tagDao(),
+            dayEntryDao = database.dayEntryDao(),
+        )
     }
 
     val calendarRepository: CalendarRepository by lazy {
