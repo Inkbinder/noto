@@ -44,6 +44,19 @@ class UserPreferencesRepositoryTest {
     }
 
     @Test
+    fun setPeriodReminderEnabled_time_andLastReminderKey_persistUpdatedValues() = runBlocking {
+        repository.setPeriodReminderEnabled(true)
+        repository.setPeriodReminderMinutesAfterMidnight(22 * 60 + 15)
+        repository.setLastPeriodReminderKey("2026-06-14|2026-06-17")
+
+        val preferences = repository.userPreferences.first()
+
+        assertEquals(true, preferences.periodReminderEnabled)
+        assertEquals(22 * 60 + 15, preferences.periodReminderMinutesAfterMidnight)
+        assertEquals("2026-06-14|2026-06-17", preferences.lastPeriodReminderKey)
+    }
+
+    @Test
     fun setDefaultCycleLengthDays_clampsToSupportedRange() = runBlocking {
         repository.setDefaultCycleLengthDays(8)
         assertEquals(14, repository.userPreferences.first().defaultCycleLengthDays)

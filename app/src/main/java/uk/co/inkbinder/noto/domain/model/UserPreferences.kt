@@ -9,8 +9,10 @@ enum class WeekStart(val dayOfWeek: DayOfWeek) {
 
 data class UserPreferences(
     val periodPredictionEnabled: Boolean = true,
+    val periodReminderEnabled: Boolean = false,
+    val periodReminderMinutesAfterMidnight: Int = 9 * 60,
     val defaultCycleLengthDays: Int = 28,
     val weekStartsOn: WeekStart = WeekStart.MONDAY,
+    val lastPeriodReminderKey: String? = null,
     val seededDefaultsVersion: Int = 0,
 )
-

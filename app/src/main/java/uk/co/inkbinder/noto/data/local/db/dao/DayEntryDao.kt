@@ -51,4 +51,15 @@ interface DayEntryDao {
         """,
     )
     fun observePeriodDates(): Flow<List<String>>
+
+    @Query(
+        """
+        SELECT refs.date
+        FROM day_tag_cross_refs AS refs
+        INNER JOIN tags AS tags ON tags.id = refs.tagId
+        WHERE tags.isPeriodTag = 1
+        ORDER BY refs.date ASC
+        """,
+    )
+    suspend fun getPeriodDates(): List<String>
 }

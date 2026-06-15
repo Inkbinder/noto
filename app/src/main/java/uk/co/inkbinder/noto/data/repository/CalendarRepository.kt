@@ -6,6 +6,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import uk.co.inkbinder.noto.data.local.db.dao.DayEntryDao
 import uk.co.inkbinder.noto.data.local.db.dao.TagDao
 import uk.co.inkbinder.noto.data.local.db.entity.DayEntryEntity
@@ -17,6 +18,8 @@ import uk.co.inkbinder.noto.domain.model.CalendarDaySummary
 import uk.co.inkbinder.noto.domain.model.DayDetail
 import uk.co.inkbinder.noto.domain.model.MonthOverview
 import uk.co.inkbinder.noto.domain.model.Tag
+import uk.co.inkbinder.noto.domain.prediction.PeriodDueReminder
+import uk.co.inkbinder.noto.domain.prediction.PeriodReminderPlanner
 import uk.co.inkbinder.noto.domain.prediction.PeriodPredictionEngine
 
 class CalendarRepository(
@@ -24,6 +27,7 @@ class CalendarRepository(
     private val tagDao: TagDao,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val predictionEngine: PeriodPredictionEngine = PeriodPredictionEngine(),
+    private val periodReminderPlanner: PeriodReminderPlanner = PeriodReminderPlanner(),
     private val clock: Clock = Clock.systemDefaultZone(),
 ) {
     fun observeMonthOverview(month: YearMonth): Flow<MonthOverview> {
@@ -88,6 +92,26 @@ class CalendarRepository(
         }
 
         dayEntryDao.deleteEntryIfEmpty(dayKey)
+    }
+
+    suspend fun getPeriodReminder(): PeriodDueReminder? {
+        val preferences = userPreferencesRepository.userPreferences.first()
+        if (!preferences.periodPredictionEnabled || !preferences.periodReminderEnabled) {
+            return null
+        }
+
+        val today = LocalDate.now(clock)
+        val prediction = predictionEngine.predictNextPeriod(
+            periodDateStrings = dayEntryDao.getPeriodDates(),
+            preferences = preferences,
+            today = today,
+        ) ?: return null
+
+        return periodReminderPlanner.plan(
+            prediction = prediction,
+            today = today,
+            lastReminderKey = preferences.lastPeriodReminderKey,
+        )
     }
 
     private fun buildTagColorsByDate(

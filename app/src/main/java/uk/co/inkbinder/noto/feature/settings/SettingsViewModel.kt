@@ -23,6 +23,18 @@ class SettingsViewModel(
         }
     }
 
+    fun setReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setPeriodReminderEnabled(enabled)
+        }
+    }
+
+    fun setReminderTime(minutesAfterMidnight: Int) {
+        viewModelScope.launch {
+            userPreferencesRepository.setPeriodReminderMinutesAfterMidnight(minutesAfterMidnight)
+        }
+    }
+
     fun incrementCycleLength() {
         viewModelScope.launch {
             val current = uiState.value.defaultCycleLengthDays
@@ -43,4 +55,3 @@ class SettingsViewModel(
         }
     }
 }
-

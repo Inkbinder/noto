@@ -2,6 +2,8 @@ package uk.co.inkbinder.noto.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
+import uk.co.inkbinder.noto.background.PeriodReminderScheduler
 import uk.co.inkbinder.noto.data.local.db.NotoDatabase
 import uk.co.inkbinder.noto.data.preferences.UserPreferencesRepository
 import uk.co.inkbinder.noto.data.repository.CalendarRepository
@@ -55,5 +57,9 @@ class AppContainer private constructor(
             tagDao = database.tagDao(),
             userPreferencesRepository = userPreferencesRepository,
         )
+    }
+
+    val periodReminderScheduler: PeriodReminderScheduler by lazy {
+        PeriodReminderScheduler(WorkManager.getInstance(appContext))
     }
 }

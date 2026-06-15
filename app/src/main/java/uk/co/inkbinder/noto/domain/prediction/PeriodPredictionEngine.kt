@@ -5,16 +5,17 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 import uk.co.inkbinder.noto.domain.model.UserPreferences
 
+data class PeriodPrediction(
+    val predictedStart: LocalDate,
+    val daysUntil: Int,
+)
+
 class PeriodPredictionEngine {
-    fun buildBanner(
+    fun predictNextPeriod(
         periodDateStrings: List<String>,
         preferences: UserPreferences,
         today: LocalDate,
-    ): String {
-        if (!preferences.periodPredictionEnabled) {
-            return "Prediction off"
-        }
-
+    ): PeriodPrediction? {
         val periodDates = periodDateStrings
             .asSequence()
             .map(LocalDate::parse)
@@ -23,11 +24,11 @@ class PeriodPredictionEngine {
             .toList()
 
         if (periodDates.isEmpty()) {
-            return "No prediction yet"
+            return null
         }
 
         val periodStarts = collapseToPeriodStarts(periodDates)
-        val lastStart = periodStarts.lastOrNull() ?: return "No prediction yet"
+        val lastStart = periodStarts.lastOrNull() ?: return null
 
         val predictedStart = when {
             periodStarts.size == 1 -> lastStart.plusDays(preferences.defaultCycleLengthDays.toLong())
@@ -41,11 +42,31 @@ class PeriodPredictionEngine {
             }
         }
 
-        val daysUntil = ChronoUnit.DAYS.between(today, predictedStart).toInt()
+        return PeriodPrediction(
+            predictedStart = predictedStart,
+            daysUntil = ChronoUnit.DAYS.between(today, predictedStart).toInt(),
+        )
+    }
+
+    fun buildBanner(
+        periodDateStrings: List<String>,
+        preferences: UserPreferences,
+        today: LocalDate,
+    ): String {
+        if (!preferences.periodPredictionEnabled) {
+            return "Prediction off"
+        }
+
+        val prediction = predictNextPeriod(
+            periodDateStrings = periodDateStrings,
+            preferences = preferences,
+            today = today,
+        ) ?: return "No prediction yet"
+
         return when {
-            daysUntil > 0 -> "Period due in $daysUntil days"
-            daysUntil == 0 -> "Period due today"
-            else -> "Delayed by ${-daysUntil} days"
+            prediction.daysUntil > 0 -> "Period due in ${prediction.daysUntil} days"
+            prediction.daysUntil == 0 -> "Period due today"
+            else -> "Delayed by ${-prediction.daysUntil} days"
         }
     }
 
@@ -63,4 +84,3 @@ class PeriodPredictionEngine {
         return starts
     }
 }
-

@@ -45,6 +45,9 @@ class SettingsRouteSmokeTest {
 
         waitForText("28 days")
         composeRule.onNodeWithText("Period prediction").assertExists()
+        composeRule.onNodeWithText("Period reminders").assertExists()
+        composeRule.onNodeWithText("Reminder time").assertExists()
+        composeRule.onNodeWithText("09:00").assertExists()
         composeRule.onNodeWithText("+").performClick()
         waitForText("29 days")
     }

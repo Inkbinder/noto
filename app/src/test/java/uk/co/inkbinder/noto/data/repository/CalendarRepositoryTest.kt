@@ -16,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -163,6 +164,34 @@ class CalendarRepositoryTest {
         assertEquals(activeTags.take(6).map { tag -> tag.colorHex }, day.visibleTagColors)
         assertEquals(1, day.overflowCount)
         assertFalse(day.visibleTagColors.contains(archivedTag.colorHex))
+    }
+
+    @Test
+    fun getPeriodReminder_returnsReminderWhenPredictedStartIsWithinThreeDays() = runBlocking {
+        userPreferencesRepository.setPeriodReminderEnabled(true)
+        database.tagDao().upsert(
+            TagEntity("period", "Period", "#CC0000", true, false, 0),
+        )
+        database.dayEntryDao().insertRef(DayTagCrossRef(date = "2026-05-20", tagId = "period"))
+
+        val reminder = repository.getPeriodReminder()
+
+        assertEquals("Period due in 3 days", reminder?.title)
+        assertEquals("2026-06-14|2026-06-17", reminder?.reminderKey)
+    }
+
+    @Test
+    fun getPeriodReminder_skipsWhenTheCurrentReminderWasAlreadySent() = runBlocking {
+        userPreferencesRepository.setPeriodReminderEnabled(true)
+        userPreferencesRepository.setLastPeriodReminderKey("2026-06-14|2026-06-17")
+        database.tagDao().upsert(
+            TagEntity("period", "Period", "#CC0000", true, false, 0),
+        )
+        database.dayEntryDao().insertRef(DayTagCrossRef(date = "2026-05-20", tagId = "period"))
+
+        val reminder = repository.getPeriodReminder()
+
+        assertNull(reminder)
     }
 
     private fun countDayEntries(date: LocalDate): Int = database

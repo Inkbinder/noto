@@ -59,7 +59,7 @@ class NotoAppSmokeTest {
 
         composeRule.onNodeWithText("Settings").performClick()
         waitForText("Period prediction")
-        composeRule.onNodeWithText("Default cycle length").assertExists()
+        composeRule.onNodeWithText("Period reminders").assertExists()
     }
 
     @Test
