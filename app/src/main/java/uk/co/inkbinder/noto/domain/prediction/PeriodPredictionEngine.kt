@@ -16,13 +16,7 @@ class PeriodPredictionEngine {
         preferences: UserPreferences,
         today: LocalDate,
     ): PeriodPrediction? {
-        val periodDates = periodDateStrings
-            .asSequence()
-            .map(LocalDate::parse)
-            .distinct()
-            .sorted()
-            .toList()
-
+        val periodDates = normalizePeriodDates(periodDateStrings)
         if (periodDates.isEmpty()) {
             return null
         }
@@ -53,12 +47,17 @@ class PeriodPredictionEngine {
         preferences: UserPreferences,
         today: LocalDate,
     ): String {
+        val periodDates = normalizePeriodDates(periodDateStrings)
+        currentPeriodDay(periodDates = periodDates, today = today)?.let { day ->
+            return "Period. Day $day"
+        }
+
         if (!preferences.periodPredictionEnabled) {
             return "Prediction off"
         }
 
         val prediction = predictNextPeriod(
-            periodDateStrings = periodDateStrings,
+            periodDateStrings = periodDates.map(LocalDate::toString),
             preferences = preferences,
             today = today,
         ) ?: return "No prediction yet"
@@ -68,6 +67,27 @@ class PeriodPredictionEngine {
             prediction.daysUntil == 0 -> "Period due today"
             else -> "Delayed by ${-prediction.daysUntil} days"
         }
+    }
+
+    private fun normalizePeriodDates(periodDateStrings: List<String>): List<LocalDate> = periodDateStrings
+        .asSequence()
+        .map(LocalDate::parse)
+        .distinct()
+        .sorted()
+        .toList()
+
+    private fun currentPeriodDay(periodDates: List<LocalDate>, today: LocalDate): Int? {
+        if (today !in periodDates) {
+            return null
+        }
+
+        var dayCount = 1
+        var cursor = today.minusDays(1)
+        while (cursor in periodDates) {
+            dayCount += 1
+            cursor = cursor.minusDays(1)
+        }
+        return dayCount
     }
 
     private fun collapseToPeriodStarts(periodDates: List<LocalDate>): List<LocalDate> {

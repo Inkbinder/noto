@@ -20,6 +20,32 @@ class PeriodPredictionEngineTest {
     }
 
     @Test
+    fun buildBanner_showsCurrentPeriodDayWhenTodayIsLogged() {
+        val banner = engine.buildBanner(
+            periodDateStrings = listOf(
+                "2026-06-14",
+                "2026-06-13",
+                "2026-06-12",
+            ),
+            preferences = UserPreferences(),
+            today = LocalDate.of(2026, 6, 14),
+        )
+
+        assertEquals("Period. Day 3", banner)
+    }
+
+    @Test
+    fun buildBanner_showsCurrentPeriodDayEvenWhenPredictionIsOff() {
+        val banner = engine.buildBanner(
+            periodDateStrings = listOf("2026-06-14"),
+            preferences = UserPreferences(periodPredictionEnabled = false),
+            today = LocalDate.of(2026, 6, 14),
+        )
+
+        assertEquals("Period. Day 1", banner)
+    }
+
+    @Test
     fun buildBanner_returnsNoPredictionYetWithoutHistory() {
         val banner = engine.buildBanner(
             periodDateStrings = emptyList(),
