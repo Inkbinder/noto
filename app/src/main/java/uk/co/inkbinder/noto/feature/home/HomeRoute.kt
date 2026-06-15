@@ -18,23 +18,33 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,6 +53,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import java.time.DayOfWeek
+import java.time.Month
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -74,6 +85,7 @@ fun HomeRoute(
         uiState = uiState,
         onPreviousMonth = viewModel::showPreviousMonth,
         onNextMonth = viewModel::showNextMonth,
+        onSelectMonth = viewModel::setMonth,
         onOpenDay = onOpenDay,
         modifier = modifier,
     )
@@ -84,10 +96,12 @@ private fun HomeScreen(
     uiState: HomeUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onSelectMonth: (YearMonth) -> Unit,
     onOpenDay: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val monthOverview = uiState.monthOverview ?: return
+    var showMonthPicker by remember(monthOverview.month) { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -120,11 +134,23 @@ private fun HomeScreen(
             month = monthOverview.month,
             onPreviousMonth = onPreviousMonth,
             onNextMonth = onNextMonth,
+            onOpenMonthPicker = { showMonthPicker = true },
         )
 
         CalendarGrid(
             monthOverview = monthOverview,
             onOpenDay = onOpenDay,
+        )
+    }
+
+    if (showMonthPicker) {
+        MonthYearPickerDialog(
+            initialMonth = monthOverview.month,
+            onDismiss = { showMonthPicker = false },
+            onConfirm = { selectedMonth ->
+                onSelectMonth(selectedMonth)
+                showMonthPicker = false
+            },
         )
     }
 }
@@ -134,6 +160,7 @@ private fun MonthHeader(
     month: YearMonth,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onOpenMonthPicker: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -147,11 +174,95 @@ private fun MonthHeader(
             text = month.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(onClick = onOpenMonthPicker)
+                .semantics {
+                    contentDescription = "Choose month"
+                }
+                .padding(horizontal = 12.dp, vertical = 8.dp),
         )
         IconButton(onClick = onNextMonth) {
             Icon(Icons.Default.ChevronRight, contentDescription = "Next month")
         }
     }
+}
+
+@Composable
+private fun MonthYearPickerDialog(
+    initialMonth: YearMonth,
+    onDismiss: () -> Unit,
+    onConfirm: (YearMonth) -> Unit,
+) {
+    var selectedYear by remember(initialMonth) { mutableStateOf(initialMonth.year) }
+    var selectedMonth by remember(initialMonth) { mutableStateOf(initialMonth.month) }
+    val monthChoices = remember { Month.entries.chunked(3) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Choose month") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = { selectedYear -= 1 }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous year")
+                    }
+                    Text(
+                        text = selectedYear.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    IconButton(onClick = { selectedYear += 1 }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next year")
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    monthChoices.forEach { rowMonths ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            rowMonths.forEach { month ->
+                                val selected = month == selectedMonth
+                                if (selected) {
+                                    FilledTonalButton(
+                                        onClick = { selectedMonth = month },
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Text(monthPickerLabel(month))
+                                    }
+                                } else {
+                                    OutlinedButton(
+                                        onClick = { selectedMonth = month },
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Text(monthPickerLabel(month))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(YearMonth.of(selectedYear, selectedMonth)) },
+            ) {
+                Text("Apply")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+    )
 }
 
 @Composable
@@ -262,6 +373,9 @@ private fun CalendarDayCell(
 
 private fun buildWeekdays(weekStartsOn: DayOfWeek): List<DayOfWeek> =
     List(7) { index -> weekStartsOn.plus(index.toLong()) }
+
+private fun monthPickerLabel(month: Month): String =
+    month.getDisplayName(TextStyle.SHORT, Locale.getDefault()).replace(".", "").take(3)
 
 private fun colorFromHex(hex: String): Color = runCatching {
     Color(android.graphics.Color.parseColor(hex))

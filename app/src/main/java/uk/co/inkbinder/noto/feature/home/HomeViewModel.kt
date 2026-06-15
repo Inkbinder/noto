@@ -42,4 +42,8 @@ class HomeViewModel(
     fun showNextMonth() {
         currentMonth.update { it.plusMonths(1) }
     }
+
+    fun setMonth(month: YearMonth) {
+        currentMonth.value = month
+    }
 }
