@@ -29,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -139,10 +141,46 @@ fun SettingsRoute(
                     supportingContent = { Text("${uiState.defaultCycleLengthDays} days") },
                     trailingContent = {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = viewModel::decrementCycleLength) {
+                            OutlinedButton(
+                                onClick = viewModel::decrementCycleLength,
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Decrease cycle length"
+                                },
+                            ) {
                                 Text("-")
                             }
-                            OutlinedButton(onClick = viewModel::incrementCycleLength) {
+                            OutlinedButton(
+                                onClick = viewModel::incrementCycleLength,
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Increase cycle length"
+                                },
+                            ) {
+                                Text("+")
+                            }
+                        }
+                    },
+                )
+            }
+            item {
+                ListItem(
+                    headlineContent = { Text("Default period length") },
+                    supportingContent = { Text("${uiState.defaultPeriodLengthDays} days") },
+                    trailingContent = {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = viewModel::decrementPeriodLength,
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Decrease period length"
+                                },
+                            ) {
+                                Text("-")
+                            }
+                            OutlinedButton(
+                                onClick = viewModel::incrementPeriodLength,
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Increase period length"
+                                },
+                            ) {
                                 Text("+")
                             }
                         }

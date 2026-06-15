@@ -49,6 +49,20 @@ class SettingsViewModel(
         }
     }
 
+    fun incrementPeriodLength() {
+        viewModelScope.launch {
+            val current = uiState.value.defaultPeriodLengthDays
+            userPreferencesRepository.setDefaultPeriodLengthDays(current + 1)
+        }
+    }
+
+    fun decrementPeriodLength() {
+        viewModelScope.launch {
+            val current = uiState.value.defaultPeriodLengthDays
+            userPreferencesRepository.setDefaultPeriodLengthDays(current - 1)
+        }
+    }
+
     fun setWeekStart(weekStart: WeekStart) {
         viewModelScope.launch {
             userPreferencesRepository.setWeekStartsOn(weekStart)

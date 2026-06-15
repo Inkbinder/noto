@@ -12,6 +12,7 @@ data class UserPreferences(
     val periodReminderEnabled: Boolean = false,
     val periodReminderMinutesAfterMidnight: Int = 9 * 60,
     val defaultCycleLengthDays: Int = 28,
+    val defaultPeriodLengthDays: Int = 4,
     val weekStartsOn: WeekStart = WeekStart.MONDAY,
     val lastPeriodReminderKey: String? = null,
     val seededDefaultsVersion: Int = 0,

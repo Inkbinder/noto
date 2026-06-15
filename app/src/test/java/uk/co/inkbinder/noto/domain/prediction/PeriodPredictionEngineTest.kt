@@ -97,4 +97,47 @@ class PeriodPredictionEngineTest {
 
         assertEquals("Delayed by 4 days", banner)
     }
+
+    @Test
+    fun predictedPeriodDates_usesDefaultPeriodLengthWithOneLoggedRun() {
+        val dates = engine.predictedPeriodDates(
+            periodDateStrings = listOf("2026-06-01"),
+            preferences = UserPreferences(defaultCycleLengthDays = 28, defaultPeriodLengthDays = 4),
+            today = LocalDate.of(2026, 6, 20),
+        )
+
+        assertEquals(
+            listOf(
+                LocalDate.of(2026, 6, 29),
+                LocalDate.of(2026, 6, 30),
+                LocalDate.of(2026, 7, 1),
+                LocalDate.of(2026, 7, 2),
+            ),
+            dates,
+        )
+    }
+
+    @Test
+    fun predictedPeriodDates_usesAverageRunLengthAcrossRecentRuns() {
+        val dates = engine.predictedPeriodDates(
+            periodDateStrings = listOf(
+                "2026-05-01",
+                "2026-05-02",
+                "2026-05-29",
+                "2026-05-30",
+                "2026-05-31",
+            ),
+            preferences = UserPreferences(defaultPeriodLengthDays = 4),
+            today = LocalDate.of(2026, 6, 14),
+        )
+
+        assertEquals(
+            listOf(
+                LocalDate.of(2026, 6, 26),
+                LocalDate.of(2026, 6, 27),
+                LocalDate.of(2026, 6, 28),
+            ),
+            dates,
+        )
+    }
 }

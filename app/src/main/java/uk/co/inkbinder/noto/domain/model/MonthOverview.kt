@@ -17,5 +17,5 @@ data class CalendarDaySummary(
     val isToday: Boolean,
     val visibleTagColors: List<String>,
     val overflowCount: Int,
+    val predictedPeriodColorHex: String? = null,
 )
-

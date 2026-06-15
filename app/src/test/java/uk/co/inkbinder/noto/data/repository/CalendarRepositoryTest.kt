@@ -131,8 +131,10 @@ class CalendarRepositoryTest {
     @Test
     fun observeMonthOverview_sortsVisibleColorsAndReportsOverflow() = runBlocking {
         userPreferencesRepository.setWeekStartsOn(WeekStart.SUNDAY)
+        userPreferencesRepository.setDefaultPeriodLengthDays(4)
 
         val visibleDate = LocalDate.of(2026, 6, 14)
+        val predictedDate = LocalDate.of(2026, 6, 26)
         val activeTags = listOf(
             TagEntity("tag-1", "Tag 1", "#110000", false, false, 1),
             TagEntity("tag-2", "Tag 2", "#220000", false, false, 2),
@@ -155,6 +157,7 @@ class CalendarRepositoryTest {
 
         val overview = repository.observeMonthOverview(YearMonth.of(2026, 6)).first()
         val day = overview.weeks.flatten().first { summary -> summary.date == visibleDate }
+        val predictedDay = overview.weeks.flatten().first { summary -> summary.date == predictedDate }
 
         assertEquals("Period due in 12 days", overview.bannerText)
         assertEquals(DayOfWeek.SUNDAY, overview.weekStartsOn)
@@ -164,6 +167,7 @@ class CalendarRepositoryTest {
         assertEquals(activeTags.take(6).map { tag -> tag.colorHex }, day.visibleTagColors)
         assertEquals(1, day.overflowCount)
         assertFalse(day.visibleTagColors.contains(archivedTag.colorHex))
+        assertEquals("#CC0000", predictedDay.predictedPeriodColorHex)
     }
 
     @Test

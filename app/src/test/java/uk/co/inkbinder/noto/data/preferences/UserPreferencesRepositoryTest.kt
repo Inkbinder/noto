@@ -66,6 +66,15 @@ class UserPreferencesRepositoryTest {
     }
 
     @Test
+    fun setDefaultPeriodLengthDays_clampsToSupportedRange() = runBlocking {
+        repository.setDefaultPeriodLengthDays(0)
+        assertEquals(1, repository.userPreferences.first().defaultPeriodLengthDays)
+
+        repository.setDefaultPeriodLengthDays(20)
+        assertEquals(14, repository.userPreferences.first().defaultPeriodLengthDays)
+    }
+
+    @Test
     fun setWeekStartsOn_andMarkDefaultsSeeded_persistValues() = runBlocking {
         repository.setWeekStartsOn(WeekStart.SUNDAY)
         repository.markDefaultsSeeded(3)

@@ -10,6 +10,8 @@ object MonthGridBuilder {
         month: YearMonth,
         weekStartsOn: DayOfWeek,
         visibleTagColorsByDate: Map<String, List<String>>,
+        predictedPeriodDates: Set<String>,
+        predictedPeriodColorHex: String?,
         today: LocalDate,
         maxVisibleSlices: Int,
     ): List<List<CalendarDaySummary>> {
@@ -27,9 +29,13 @@ object MonthGridBuilder {
                     isToday = date == today,
                     visibleTagColors = colors.take(maxVisibleSlices),
                     overflowCount = (colors.size - maxVisibleSlices).coerceAtLeast(0),
+                    predictedPeriodColorHex = if (date.toString() in predictedPeriodDates) {
+                        predictedPeriodColorHex
+                    } else {
+                        null
+                    },
                 )
             }
             .chunked(7)
     }
 }
-

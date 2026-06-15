@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -63,6 +64,7 @@ import uk.co.inkbinder.noto.domain.model.CalendarDaySummary
 import uk.co.inkbinder.noto.domain.model.MonthOverview
 
 private const val DAY_SLICE_FILL_ALPHA = 0.68f
+private const val PREDICTED_PERIOD_STRIPE_HEIGHT = 5
 
 @Composable
 fun HomeRoute(
@@ -329,6 +331,16 @@ private fun CalendarDayCell(
                 },
             ),
     ) {
+        day.predictedPeriodColorHex?.let { colorHex ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(PREDICTED_PERIOD_STRIPE_HEIGHT.dp)
+                    .background(colorFromHex(colorHex))
+                    .align(Alignment.TopCenter),
+            )
+        }
+
         Row(modifier = Modifier.fillMaxSize()) {
             day.visibleTagColors.forEach { colorHex ->
                 Box(

@@ -15,6 +15,8 @@ class MonthGridBuilderTest {
             month = YearMonth.of(2026, 6),
             weekStartsOn = DayOfWeek.SUNDAY,
             visibleTagColorsByDate = emptyMap(),
+            predictedPeriodDates = emptySet(),
+            predictedPeriodColorHex = null,
             today = LocalDate.of(2026, 6, 14),
             maxVisibleSlices = 6,
         )
@@ -44,6 +46,8 @@ class MonthGridBuilderTest {
             month = YearMonth.of(2026, 6),
             weekStartsOn = DayOfWeek.MONDAY,
             visibleTagColorsByDate = mapOf(targetDate.toString() to colors),
+            predictedPeriodDates = emptySet(),
+            predictedPeriodColorHex = null,
             today = targetDate,
             maxVisibleSlices = 6,
         )
@@ -54,5 +58,24 @@ class MonthGridBuilderTest {
         assertTrue(day.isToday)
         assertEquals(colors.take(6), day.visibleTagColors)
         assertEquals(1, day.overflowCount)
+    }
+
+    @Test
+    fun build_marksPredictedPeriodDaysWithTheStripeColor() {
+        val predictedDate = LocalDate.of(2026, 6, 26)
+
+        val weeks = MonthGridBuilder.build(
+            month = YearMonth.of(2026, 6),
+            weekStartsOn = DayOfWeek.MONDAY,
+            visibleTagColorsByDate = emptyMap(),
+            predictedPeriodDates = setOf(predictedDate.toString()),
+            predictedPeriodColorHex = "#CC0000",
+            today = LocalDate.of(2026, 6, 14),
+            maxVisibleSlices = 6,
+        )
+
+        val day = weeks.flatten().first { summary -> summary.date == predictedDate }
+
+        assertEquals("#CC0000", day.predictedPeriodColorHex)
     }
 }

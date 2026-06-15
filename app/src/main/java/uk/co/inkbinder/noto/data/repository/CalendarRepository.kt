@@ -43,10 +43,20 @@ class CalendarRepository(
             val today = LocalDate.now(clock)
             val tagsById = tagEntities.associateBy(TagEntity::id)
             val colorsByDate = buildTagColorsByDate(tagRefs, tagsById)
+            val predictedPeriodDates = predictionEngine.predictedPeriodDates(
+                periodDateStrings = periodDateStrings,
+                preferences = preferences,
+                today = today,
+            ).map(LocalDate::toString).toSet()
+            val periodTagColorHex = tagEntities
+                .firstOrNull { entity -> entity.isPeriodTag && !entity.isArchived }
+                ?.colorHex
             val weeks = MonthGridBuilder.build(
                 month = month,
                 weekStartsOn = preferences.weekStartsOn.dayOfWeek,
                 visibleTagColorsByDate = colorsByDate,
+                predictedPeriodDates = predictedPeriodDates,
+                predictedPeriodColorHex = periodTagColorHex,
                 today = today,
                 maxVisibleSlices = 6,
             )

@@ -26,6 +26,7 @@ class UserPreferencesRepository internal constructor(
             periodReminderEnabled = preferences[periodReminderEnabledKey] ?: false,
             periodReminderMinutesAfterMidnight = preferences[periodReminderMinutesAfterMidnightKey] ?: 9 * 60,
             defaultCycleLengthDays = preferences[defaultCycleLengthDaysKey] ?: 28,
+            defaultPeriodLengthDays = preferences[defaultPeriodLengthDaysKey] ?: 4,
             weekStartsOn = preferences[weekStartsOnKey]
                 ?.let(WeekStart::valueOf)
                 ?: WeekStart.MONDAY,
@@ -64,6 +65,12 @@ class UserPreferencesRepository internal constructor(
         }
     }
 
+    suspend fun setDefaultPeriodLengthDays(days: Int) {
+        userPreferencesStore.edit { preferences ->
+            preferences[defaultPeriodLengthDaysKey] = days.coerceIn(1, 14)
+        }
+    }
+
     suspend fun setWeekStartsOn(weekStart: WeekStart) {
         userPreferencesStore.edit { preferences ->
             preferences[weekStartsOnKey] = weekStart.name
@@ -85,6 +92,7 @@ class UserPreferencesRepository internal constructor(
         val periodReminderEnabledKey = booleanPreferencesKey("period_reminder_enabled")
         val periodReminderMinutesAfterMidnightKey = intPreferencesKey("period_reminder_minutes_after_midnight")
         val defaultCycleLengthDaysKey = intPreferencesKey("default_cycle_length_days")
+        val defaultPeriodLengthDaysKey = intPreferencesKey("default_period_length_days")
         val weekStartsOnKey = stringPreferencesKey("week_starts_on")
         val lastPeriodReminderKey = stringPreferencesKey("last_period_reminder_key")
         val seededDefaultsVersionKey = intPreferencesKey("seeded_defaults_version")

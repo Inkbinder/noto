@@ -48,7 +48,11 @@ class SettingsRouteSmokeTest {
         composeRule.onNodeWithText("Period reminders").assertExists()
         composeRule.onNodeWithText("Reminder time").assertExists()
         composeRule.onNodeWithText("09:00").assertExists()
-        composeRule.onNodeWithText("+").performClick()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Default period length"))
+        composeRule.onNodeWithText("Default period length").assertExists()
+        composeRule.onNodeWithText("4 days").assertExists()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasContentDescription("Increase cycle length"))
+        composeRule.onNodeWithContentDescription("Increase cycle length").performClick()
         waitForText("29 days")
     }
 
