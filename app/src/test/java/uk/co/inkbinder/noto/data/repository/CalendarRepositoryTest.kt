@@ -142,7 +142,7 @@ class CalendarRepositoryTest {
             TagEntity("tag-7", "Tag 7", "#770000", false, false, 7),
         )
         val archivedTag = TagEntity("archived", "Archived", "#000000", false, true, 0)
-        val bleedingTag = TagEntity("bleeding", "Bleeding", "#CC0000", true, false, 100)
+        val bleedingTag = TagEntity("bleeding", "Period", "#CC0000", true, false, 100)
 
         database.tagDao().upsertAll(activeTags + archivedTag + bleedingTag)
         activeTags.forEach { tag ->

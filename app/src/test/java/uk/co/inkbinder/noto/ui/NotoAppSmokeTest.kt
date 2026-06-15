@@ -49,8 +49,8 @@ class NotoAppSmokeTest {
         composeRule.onNodeWithText("Calendar").assertExists()
 
         composeRule.onNodeWithText("Tags").performClick()
-        waitForText("Bleeding")
-        composeRule.onNodeWithText("Bleeding").assertExists()
+        waitForText("Period")
+        composeRule.onNodeWithText("Period").assertExists()
 
         composeRule.onNodeWithText("Settings").performClick()
         waitForText("Period prediction")

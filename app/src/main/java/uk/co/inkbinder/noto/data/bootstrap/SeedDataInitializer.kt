@@ -13,17 +13,22 @@ class SeedDataInitializer(
         val preferences = userPreferencesRepository.userPreferences.first()
         if (preferences.seededDefaultsVersion >= DEFAULTS_VERSION) return
 
-        tagRepository.upsertDefaults(defaultTags)
+        if (preferences.seededDefaultsVersion < 1) {
+            tagRepository.upsertDefaults(defaultTags)
+        }
+        if (preferences.seededDefaultsVersion < 2) {
+            tagRepository.renameTagLabel(tagId = "bleeding", label = "Period")
+        }
         userPreferencesRepository.markDefaultsSeeded(DEFAULTS_VERSION)
     }
 
     private companion object {
-        const val DEFAULTS_VERSION = 1
+        const val DEFAULTS_VERSION = 2
 
         val defaultTags = listOf(
             Tag(
                 id = "bleeding",
-                label = "Bleeding",
+                label = "Period",
                 colorHex = "#D86A6A",
                 isPeriodTag = true,
                 isArchived = false,
@@ -64,4 +69,3 @@ class SeedDataInitializer(
         )
     }
 }
-

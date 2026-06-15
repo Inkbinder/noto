@@ -56,7 +56,7 @@ class DayDetailRouteSmokeTest {
 
         waitForText(title)
         composeRule.onNodeWithText("Select all tags that apply to this day.").assertExists()
-        composeRule.onNodeWithText("Bleeding").assertExists()
+        composeRule.onNodeWithText("Period").assertExists()
         composeRule.onNodeWithText("Bad hangover").assertExists()
         composeRule.onNodeWithText("No hangover").assertExists()
         composeRule.onNodeWithText("Dodgy poops").assertExists()
