@@ -62,6 +62,31 @@ class TagsRouteSmokeTest {
     }
 
     @Test
+    fun tagsRoute_canCreateATagWithACustomColor() {
+        composeRule.setContent {
+            NotoTheme(dynamicColor = false) {
+                TagsRoute(appContainer = harness.appContainer)
+            }
+        }
+
+        waitForText("Period")
+        composeRule.onNodeWithContentDescription("Add tag").performClick()
+        composeRule.onNode(hasSetTextAction() and hasText("")).performTextInput("Cramps")
+        composeRule.onNodeWithText("Custom color").performClick()
+        waitForText("Hex color")
+        composeRule.onNode(hasSetTextAction() and hasText("#D86A6A")).performTextClearance()
+        composeRule.onNode(hasSetTextAction() and hasText("")).performTextInput("#123456")
+        composeRule.onNodeWithText("Apply").performClick()
+        waitForText("Selected: #123456")
+        composeRule.onNodeWithText("Create").performClick()
+
+        scrollToText("Cramps")
+        waitForText("Cramps")
+        composeRule.onNodeWithContentDescription("Edit Cramps").performClick()
+        waitForText("Selected: #123456")
+    }
+
+    @Test
     fun tagsRoute_showsAnArchivedTagSection() = runBlocking {
         harness.appContainer.tagRepository.archiveTag("no_hangover")
 
