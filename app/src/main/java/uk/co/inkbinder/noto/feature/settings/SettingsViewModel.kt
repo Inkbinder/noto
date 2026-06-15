@@ -23,6 +23,12 @@ class SettingsViewModel(
         }
     }
 
+    fun setPredictionUsesHistory(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setPredictionUsesHistory(enabled)
+        }
+    }
+
     fun setReminderEnabled(enabled: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.setPeriodReminderEnabled(enabled)

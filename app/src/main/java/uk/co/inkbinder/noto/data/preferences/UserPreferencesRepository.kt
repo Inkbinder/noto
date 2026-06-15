@@ -23,6 +23,7 @@ class UserPreferencesRepository internal constructor(
     val userPreferences: Flow<UserPreferences> = userPreferencesStore.data.map { preferences ->
         UserPreferences(
             periodPredictionEnabled = preferences[periodPredictionEnabledKey] ?: true,
+            periodPredictionUsesHistory = preferences[periodPredictionUsesHistoryKey] ?: true,
             periodReminderEnabled = preferences[periodReminderEnabledKey] ?: false,
             periodReminderMinutesAfterMidnight = preferences[periodReminderMinutesAfterMidnightKey] ?: 9 * 60,
             defaultCycleLengthDays = preferences[defaultCycleLengthDaysKey] ?: 28,
@@ -44,6 +45,12 @@ class UserPreferencesRepository internal constructor(
     suspend fun setPredictionEnabled(enabled: Boolean) {
         userPreferencesStore.edit { preferences ->
             preferences[periodPredictionEnabledKey] = enabled
+        }
+    }
+
+    suspend fun setPredictionUsesHistory(enabled: Boolean) {
+        userPreferencesStore.edit { preferences ->
+            preferences[periodPredictionUsesHistoryKey] = enabled
         }
     }
 
@@ -89,6 +96,7 @@ class UserPreferencesRepository internal constructor(
 
     private companion object {
         val periodPredictionEnabledKey = booleanPreferencesKey("period_prediction_enabled")
+        val periodPredictionUsesHistoryKey = booleanPreferencesKey("period_prediction_uses_history")
         val periodReminderEnabledKey = booleanPreferencesKey("period_reminder_enabled")
         val periodReminderMinutesAfterMidnightKey = intPreferencesKey("period_reminder_minutes_after_midnight")
         val defaultCycleLengthDaysKey = intPreferencesKey("default_cycle_length_days")

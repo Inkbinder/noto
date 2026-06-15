@@ -92,6 +92,27 @@ fun SettingsRoute(
             }
             item {
                 ListItem(
+                    headlineContent = { Text("Use logged history") },
+                    supportingContent = {
+                        Text(
+                            if (uiState.periodPredictionUsesHistory) {
+                                "Use logged periods to calculate average cycle and period length."
+                            } else {
+                                "Ignore historical averages and use only the manual cycle and period lengths."
+                            },
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = uiState.periodPredictionUsesHistory,
+                            onCheckedChange = viewModel::setPredictionUsesHistory,
+                            enabled = uiState.periodPredictionEnabled,
+                        )
+                    },
+                )
+            }
+            item {
+                ListItem(
                     headlineContent = { Text("Period reminders") },
                     supportingContent = {
                         Text(

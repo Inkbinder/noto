@@ -27,6 +27,9 @@ class PeriodPredictionEngine {
         val lastStart = periodStarts.lastOrNull() ?: return null
 
         val predictedStart = when {
+            !preferences.periodPredictionUsesHistory -> {
+                lastStart.plusDays(preferences.defaultCycleLengthDays.toLong())
+            }
             periodStarts.size == 1 -> lastStart.plusDays(preferences.defaultCycleLengthDays.toLong())
             else -> {
                 val intervals = periodStarts
@@ -39,6 +42,7 @@ class PeriodPredictionEngine {
         }
 
         val predictedLengthDays = when {
+            !preferences.periodPredictionUsesHistory -> preferences.defaultPeriodLengthDays
             periodRuns.size <= 1 -> preferences.defaultPeriodLengthDays
             else -> periodRuns
                 .takeLast(6)

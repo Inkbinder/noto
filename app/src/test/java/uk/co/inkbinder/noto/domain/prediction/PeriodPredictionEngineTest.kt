@@ -140,4 +140,33 @@ class PeriodPredictionEngineTest {
             dates,
         )
     }
+
+    @Test
+    fun predictedPeriodDates_ignoresHistoryWhenTheToggleIsOff() {
+        val dates = engine.predictedPeriodDates(
+            periodDateStrings = listOf(
+                "2026-05-01",
+                "2026-05-02",
+                "2026-05-29",
+                "2026-05-30",
+                "2026-05-31",
+            ),
+            preferences = UserPreferences(
+                periodPredictionUsesHistory = false,
+                defaultCycleLengthDays = 20,
+                defaultPeriodLengthDays = 4,
+            ),
+            today = LocalDate.of(2026, 6, 14),
+        )
+
+        assertEquals(
+            listOf(
+                LocalDate.of(2026, 6, 18),
+                LocalDate.of(2026, 6, 19),
+                LocalDate.of(2026, 6, 20),
+                LocalDate.of(2026, 6, 21),
+            ),
+            dates,
+        )
+    }
 }

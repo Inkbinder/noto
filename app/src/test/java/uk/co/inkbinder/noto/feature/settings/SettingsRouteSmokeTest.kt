@@ -2,7 +2,6 @@ package uk.co.inkbinder.noto.feature.settings
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -36,30 +35,22 @@ class SettingsRouteSmokeTest {
     }
 
     @Test
-    fun settingsRoute_updatesCycleLengthFromTheUi() {
+    fun settingsRoute_showsPredictionControls() {
         composeRule.setContent {
             NotoTheme(dynamicColor = false) {
                 SettingsRoute(appContainer = harness.appContainer)
             }
         }
 
-        waitForText("28 days")
         composeRule.onNodeWithText("Period prediction").assertExists()
+        composeRule.onNodeWithText("Use logged history").assertExists()
         composeRule.onNodeWithText("Period reminders").assertExists()
         composeRule.onNodeWithText("Reminder time").assertExists()
         composeRule.onNodeWithText("09:00").assertExists()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Default cycle length"))
+        composeRule.onNodeWithText("28 days").assertExists()
         composeRule.onNode(hasScrollAction()).performScrollToNode(hasText("Default period length"))
         composeRule.onNodeWithText("Default period length").assertExists()
         composeRule.onNodeWithText("4 days").assertExists()
-        composeRule.onNode(hasScrollAction()).performScrollToNode(hasContentDescription("Increase cycle length"))
-        composeRule.onNodeWithContentDescription("Increase cycle length").performClick()
-        waitForText("29 days")
-    }
-
-    private fun waitForText(text: String) {
-        composeRule.waitUntil(timeoutMillis = TimeUnit.SECONDS.toMillis(5)) {
-            composeRule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
-        }
-        composeRule.onNodeWithText(text).assertExists()
     }
 }

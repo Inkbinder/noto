@@ -44,6 +44,13 @@ class UserPreferencesRepositoryTest {
     }
 
     @Test
+    fun setPredictionUsesHistory_persistsUpdatedValue() = runBlocking {
+        repository.setPredictionUsesHistory(false)
+
+        assertEquals(false, repository.userPreferences.first().periodPredictionUsesHistory)
+    }
+
+    @Test
     fun setPeriodReminderEnabled_time_andLastReminderKey_persistUpdatedValues() = runBlocking {
         repository.setPeriodReminderEnabled(true)
         repository.setPeriodReminderMinutesAfterMidnight(22 * 60 + 15)
